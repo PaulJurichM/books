@@ -121,6 +121,7 @@ def page(title, content, root, crumbs=""):
   <p>© {AUTHOR}, 2026. Читать можно свободно. <a href="{root}ekranizaciya.html">Экранизация и права</a> · <a href="/">malari.me</a></p>
 </footer>
 <script src="{root}assets/site.js"></script>
+<script data-goatcounter="https://malari.goatcounter.com/count" async src="https://gc.zgo.at/count.js"></script>
 </body>
 </html>
 """
