@@ -103,3 +103,11 @@ sup.fn a:hover{text-decoration:underline}
 .notes li:target{background:color-mix(in srgb,var(--accent) 12%,transparent);border-radius:4px}
 sup.fn a:target{background:color-mix(in srgb,var(--accent) 18%,transparent);border-radius:3px}
 .notes .back{text-decoration:none;color:var(--accent);margin-left:.2em}
+/* главная тема цикла */
+.theme{display:flex;flex-wrap:wrap;align-items:center;gap:.35rem .8rem;margin:0 0 1.6rem;padding:.6rem .8rem;
+  border:1px solid var(--line);border-radius:8px;background:var(--paper);font-family:"PT Sans",system-ui,sans-serif;font-size:.8rem;color:var(--soft)}
+.theme .tl{color:var(--accent);font-weight:700}
+.theme audio{flex:1 1 220px;min-width:0;height:34px;color-scheme:light}
+:root[data-theme="dark"] .theme audio{color-scheme:dark}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .theme audio{color-scheme:dark}}
+.theme .tn{flex-basis:100%;font-size:.72rem}

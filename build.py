@@ -203,10 +203,26 @@ def main():
                           "section": bool(meta.get("section", "")),
                           "part": meta.get("part", ""), "url": meta.get("url", ""),
                           "alias": meta.get("alias", "")})
+        theme = os.path.exists(os.path.join(p, "theme.mp3"))  # главная тема цикла (Suno)
         img = os.path.join(p, "images")
         if os.path.isdir(img):
             shutil.copytree(img, f"{OUT}/{slug}/images")
-        cols.append({"slug": slug, "title": cmeta.get("title", d), "about": cbody, "works": works})
+        cols.append({"slug": slug, "title": cmeta.get("title", d), "about": cbody, "works": works,
+                     "theme": theme})
+
+    # главная тема цикла: копия трека и плеер на страницах сборника
+    for c in cols:
+        if c["theme"]:
+            d = next(x for x in os.listdir(SRC) if re.sub(r"^\d+-", "", x) == c["slug"])
+            os.makedirs(f"{OUT}/{c['slug']}", exist_ok=True)
+            shutil.copy(os.path.join(SRC, d, "theme.mp3"), f"{OUT}/{c['slug']}/theme.mp3")
+
+    def theme(c, note):
+        if not c["theme"]:
+            return ""
+        return (f'<div class="theme"><span class="tl">♪ Главная тема цикла</span>'
+                f'<audio controls preload="none" src="theme.mp3"></audio>'
+                f'<span class="tn">{note}</span></div>')
 
     # главная
     parts = ['<section class="hero"><h1>Проза</h1>'
@@ -224,7 +240,7 @@ def main():
     for c in cols:
         os.makedirs(f"{OUT}/{c['slug']}", exist_ok=True)
         about = render(c["about"]) if c["about"] else ""
-        body = f'<h1>{html.escape(c["title"])}</h1>{about}{toc(c["works"], "", "toc")}'
+        body = f'<h1>{html.escape(c["title"])}</h1>{theme(c, "Включите перед чтением — как заставку сериала")}{about}{toc(c["works"], "", "toc")}'
         crumbs = '<p class="crumbs"><a href="../index.html">Все сборники</a></p>'
         open(f"{OUT}/{c['slug']}/index.html", "w", encoding="utf-8").write(
             page(f'{c["title"]} — {AUTHOR}', body, "../", crumbs))
@@ -255,6 +271,7 @@ def main():
                       f'<a href="index.html">{html.escape(c["title"])}</a></p>')
             body = (f'<article><h1>{html.escape(w["title"])}</h1>'
                     f'<p class="meta">{AUTHOR} · около {w["min"]} мин чтения</p>'
+                    + theme(c, "Заставка")
                     + (f'<figure><img src="{w["pic"]}" alt="{html.escape(w["caption"] or "Иллюстрация к рассказу «" + w["title"] + "»")}" loading="lazy">'
                        + (f'<figcaption>{html.escape(w["caption"])}</figcaption>' if w["caption"] else "") + "</figure>"
                        if w["pic"] else "")
