@@ -1,4 +1,6 @@
 ---
+written: 2025-05
+revised: 2026-10
 title: Дело о последнем собрании
 source: https://proza.ru/2026/06/11/1732
 date: 11.06.2026

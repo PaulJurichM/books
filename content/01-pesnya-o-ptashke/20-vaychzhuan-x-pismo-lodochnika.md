@@ -1,4 +1,6 @@
 ---
+written: 2025-06
+revised: 2026-10
 title: Вайчжуань X. Письмо лодочника
 source: https://proza.ru/2026/06/20/1947
 date: 20.06.2026

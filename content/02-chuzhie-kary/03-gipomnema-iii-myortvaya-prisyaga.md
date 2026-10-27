@@ -1,4 +1,5 @@
 ---
+written: 2025-08
 title: Гипомнема III Мёртвая присяга
 source: https://proza.ru/2026/10/04/74
 date: 04.10.2026

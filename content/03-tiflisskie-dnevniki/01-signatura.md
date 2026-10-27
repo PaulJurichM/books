@@ -1,4 +1,5 @@
 ---
+written: 2026-01
 title: Сигнатура
 source: https://proza.ru/2026/10/04/114
 date: 04.10.2026

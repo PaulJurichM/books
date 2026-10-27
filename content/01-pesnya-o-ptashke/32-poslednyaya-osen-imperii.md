@@ -1,4 +1,6 @@
 ---
+written: 2025-06
+revised: 2026-10
 title: Последняя осень Империи
 source: https://proza.ru/2026/06/12/1825
 date: 12.06.2026

@@ -1,4 +1,6 @@
 ---
+written: 2025-01
+revised: 2026-10
 title: Три полоски
 part: Лес
 ---

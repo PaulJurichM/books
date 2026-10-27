@@ -1,4 +1,6 @@
 ---
+written: 2025-04
+revised: 2026-10
 title: Вайчжуань II
 source: https://proza.ru/2026/06/07/1892
 date: 07.06.2026

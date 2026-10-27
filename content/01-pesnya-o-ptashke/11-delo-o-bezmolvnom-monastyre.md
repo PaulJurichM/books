@@ -1,4 +1,6 @@
 ---
+written: 2025-03
+revised: 2026-10
 title: Дело о безмолвном монастыре
 source: https://proza.ru/2026/05/14/1809
 date: 14.05.2026

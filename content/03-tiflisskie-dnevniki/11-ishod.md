@@ -1,4 +1,5 @@
 ---
+written: 2026-08
 title: Исход
 source: https://proza.ru/2026/10/05/2233
 date: 05.10.2026

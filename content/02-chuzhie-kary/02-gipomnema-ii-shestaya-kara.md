@@ -1,4 +1,5 @@
 ---
+written: 2025-07
 title: Гипомнема II Шестая кара
 source: https://proza.ru/2026/10/02/2002
 date: 02.10.2026

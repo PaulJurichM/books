@@ -1,4 +1,5 @@
 ---
+written: 2026-10
 title: Буквы
 date: 24.10.2026
 caption: Гурийский рождественский гвезели. Фото: georgianrecipes.net, лицензия CC BY 3.0

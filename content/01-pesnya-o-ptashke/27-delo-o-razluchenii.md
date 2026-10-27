@@ -1,4 +1,6 @@
 ---
+written: 2025-05
+revised: 2026-10
 title: Дело о разлучении
 source: https://proza.ru/2026/06/09/1709
 date: 09.06.2026

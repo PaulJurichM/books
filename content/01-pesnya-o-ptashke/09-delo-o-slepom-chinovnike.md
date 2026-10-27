@@ -1,4 +1,6 @@
 ---
+written: 2025-02
+revised: 2026-10
 title: Дело о слепом чиновнике
 source: https://proza.ru/2026/05/10/521
 date: 10.05.2026

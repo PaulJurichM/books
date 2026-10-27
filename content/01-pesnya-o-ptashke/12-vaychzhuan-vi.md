@@ -1,4 +1,6 @@
 ---
+written: 2025-05
+revised: 2026-10
 title: Вайчжуань VI
 source: https://proza.ru/2026/06/08/1064
 date: 08.06.2026

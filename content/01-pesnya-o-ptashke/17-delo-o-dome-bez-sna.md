@@ -1,4 +1,6 @@
 ---
+written: 2025-04
+revised: 2026-10
 title: Дело о доме без сна
 source: https://proza.ru/2026/05/24/1840
 date: 24.05.2026

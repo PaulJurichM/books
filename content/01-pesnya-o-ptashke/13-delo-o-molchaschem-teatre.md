@@ -1,4 +1,6 @@
 ---
+written: 2025-03
+revised: 2026-10
 title: Дело о молчащем театре
 source: https://proza.ru/2026/05/19/1781
 date: 19.05.2026

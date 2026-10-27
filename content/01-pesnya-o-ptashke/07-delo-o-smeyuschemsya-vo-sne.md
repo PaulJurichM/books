@@ -1,4 +1,6 @@
 ---
+written: 2025-02
+revised: 2026-10
 title: Дело о смеющемся во сне
 source: https://proza.ru/2026/05/09/2032
 date: 09.05.2026

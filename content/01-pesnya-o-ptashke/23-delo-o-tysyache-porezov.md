@@ -1,4 +1,6 @@
 ---
+written: 2025-04
+revised: 2026-10
 title: Дело о тысяче порезов
 source: https://proza.ru/2026/05/31/2196
 date: 31.05.2026

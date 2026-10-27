@@ -1,4 +1,6 @@
 ---
+written: 2025-05
+revised: 2026-10
 title: Дело о последнем приговоре
 source: https://proza.ru/2026/06/07/1805
 date: 07.06.2026

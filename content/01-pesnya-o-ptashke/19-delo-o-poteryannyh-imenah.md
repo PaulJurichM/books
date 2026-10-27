@@ -1,4 +1,6 @@
 ---
+written: 2025-04
+revised: 2026-10
 title: Дело о потерянных именах
 source: https://proza.ru/2026/05/27/2096
 date: 27.05.2026

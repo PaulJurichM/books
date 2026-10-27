@@ -1,4 +1,6 @@
 ---
+written: 2025-03
+revised: 2026-10
 alias: mertvye-kanaly
 title: Дело о мертвых каналах
 source: https://proza.ru/2026/05/24/1791

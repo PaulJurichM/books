@@ -9,6 +9,9 @@ import html, os, re, shutil
 SRC, OUT = "content", "docs"
 AUTHOR = "Павел Юрич"
 SITE = "Павел Юрич. Проза"
+PLACE = "Тбилиси"
+MONTHS = ("январь февраль март апрель май июнь июль август "
+          "сентябрь октябрь ноябрь декабрь").split()
 
 
 def read(path):
@@ -41,6 +44,20 @@ def inline(text):
             return f'<sup class="fn"><a{back} href="#fn-{n}">{n}</a></sup>'
         t = re.sub(r"\[\^([^\]\s]+)\]", ref, t)
     return t
+
+
+def month(s):
+    m = re.match(r"(\d{4})-(\d{2})$", s or "")
+    return f"{MONTHS[int(m.group(2)) - 1]} {m.group(1)}" if m else ""
+
+
+def signature(written, revised=""):
+    """Подпись в конце текста: written: 2025-03 → «Тбилиси, март 2025»;
+    с revised: 2026-10 → «Тбилиси, март 2025 — октябрь 2026» (новая редакция)."""
+    w, r = month(written), month(revised)
+    if not w:
+        return ""
+    return f'<p class="sign"><em>{PLACE}, {w}{" — " + r if r else ""}</em></p>'
 
 
 def render(body):
@@ -202,7 +219,7 @@ def main():
                           "caption": meta.get("caption", ""),
                           "section": bool(meta.get("section", "")),
                           "part": meta.get("part", ""), "url": meta.get("url", ""),
-                          "alias": meta.get("alias", "")})
+                          "alias": meta.get("alias", ""), "written": meta.get("written", ""), "revised": meta.get("revised", "")})
         theme = os.path.exists(os.path.join(p, "theme.mp3"))  # главная тема цикла (Suno)
         img = os.path.join(p, "images")
         if os.path.isdir(img):
@@ -275,7 +292,7 @@ def main():
                     + (f'<figure><img src="{w["pic"]}" alt="{html.escape(w["caption"] or "Иллюстрация к рассказу «" + w["title"] + "»")}" loading="lazy">'
                        + (f'<figcaption>{html.escape(w["caption"])}</figcaption>' if w["caption"] else "") + "</figure>"
                        if w["pic"] else "")
-                    + f'{render(w["body"])}</article>{nav}')
+                    + f'{render(w["body"])}{signature(w["written"], w["revised"])}</article>{nav}')
             open(f"{OUT}/{c['slug']}/{w['slug']}.html", "w", encoding="utf-8").write(
                 page(f'{w["title"]} — {AUTHOR}', body, "../", crumbs))
 

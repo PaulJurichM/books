@@ -1,4 +1,5 @@
 ---
+written: 2025-07
 title: Гипомнема I Две правды
 source: https://proza.ru/2026/09/30/2062
 date: 30.09.2026

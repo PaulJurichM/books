@@ -1,4 +1,6 @@
 ---
+written: 2025-06
+revised: 2026-10
 title: Вайчжуань XII
 date: 08.10.2026
 ---

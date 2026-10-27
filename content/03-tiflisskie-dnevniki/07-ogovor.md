@@ -1,4 +1,5 @@
 ---
+written: 2026-05
 title: Оговор
 source: https://proza.ru/2026/10/05/2102
 date: 05.10.2026

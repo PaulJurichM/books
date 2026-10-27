@@ -1,4 +1,5 @@
 ---
+written: 2026-01
 title: Аршин
 source: https://proza.ru/2026/10/04/865
 date: 04.10.2026

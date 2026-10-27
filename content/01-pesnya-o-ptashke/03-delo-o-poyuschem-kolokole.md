@@ -1,4 +1,6 @@
 ---
+written: 2025-02
+revised: 2026-10
 title: Дело о поющем колоколе
 source: https://proza.ru/2026/05/08/1682
 date: 08.05.2026

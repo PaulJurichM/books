@@ -1,4 +1,6 @@
 ---
+written: 2025-06
+revised: 2026-10
 title: Вайчжуань VIII
 source: https://proza.ru/2026/06/12/1847
 date: 12.06.2026
