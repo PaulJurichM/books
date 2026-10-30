@@ -112,3 +112,4 @@ sup.fn a:target{background:color-mix(in srgb,var(--accent) 18%,transparent);bord
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .theme audio{color-scheme:dark}}
 .theme .tn{flex-basis:100%;font-size:.72rem}
 article p.sign{text-indent:0;text-align:right;margin:2.2rem 0 0;color:var(--soft)}
+ul.nonum{list-style:none}

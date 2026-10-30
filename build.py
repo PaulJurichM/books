@@ -163,6 +163,10 @@ def toc(works, prefix, cls=""):
                 start += len(items)
             items = []
         for w in works:
+            if w["nonum"]:  # пролог, эпилог: строка без номера, нумерация не сдвигается
+                flush()
+                out.append(f'<ul class="{(cls + " nonum").strip()}"><li>{li(w)}</li></ul>')
+                continue
             if w["part"]:
                 flush()
                 out.append(f'<h3 class="part">{html.escape(w["part"])}</h3>')
@@ -218,7 +222,7 @@ def main():
                           "body": body, "min": minutes(body), "pic": pic,
                           "caption": meta.get("caption", ""),
                           "section": bool(meta.get("section", "")),
-                          "part": meta.get("part", ""), "url": meta.get("url", ""),
+                          "part": meta.get("part", ""), "nonum": bool(meta.get("nonum", "")), "url": meta.get("url", ""),
                           "alias": meta.get("alias", ""), "written": meta.get("written", ""), "revised": meta.get("revised", "")})
         theme = os.path.exists(os.path.join(p, "theme.mp3"))  # главная тема цикла (Suno)
         img = os.path.join(p, "images")
