@@ -102,7 +102,8 @@ def minutes(body):
     return max(1, round(len(body.split()) / 180))
 
 
-def page(title, content, root, crumbs=""):
+def page(title, content, root, crumbs="", wide=False):
+    mcls = ' class="wide"' if wide else ""
     return f"""<!doctype html>
 <html lang="ru">
 <head>
@@ -130,7 +131,7 @@ def page(title, content, root, crumbs=""):
     <button class="ctl" id="theme" type="button" aria-label="Переключить тему">Тёмная</button>
   </nav>
 </header>
-<main>
+<main{mcls}>
 {crumbs}
 {content}
 </main>
@@ -225,11 +226,15 @@ def main():
                           "part": meta.get("part", ""), "nonum": bool(meta.get("nonum", "")), "url": meta.get("url", ""),
                           "alias": meta.get("alias", ""), "written": meta.get("written", ""), "revised": meta.get("revised", "")})
         theme = os.path.exists(os.path.join(p, "theme.mp3"))  # главная тема цикла (Suno)
+        cover = os.path.exists(os.path.join(p, "cover.jpg"))  # обложка плитки (make_covers.py)
         img = os.path.join(p, "images")
         if os.path.isdir(img):
             shutil.copytree(img, f"{OUT}/{slug}/images")
+        if cover:
+            os.makedirs(f"{OUT}/{slug}", exist_ok=True)
+            shutil.copy(os.path.join(p, "cover.jpg"), f"{OUT}/{slug}/cover.jpg")
         cols.append({"slug": slug, "title": cmeta.get("title", d), "about": cbody, "works": works,
-                     "theme": theme})
+                     "theme": theme, "cover": cover})
 
     # главная тема цикла: копия трека и плеер на страницах сборника
     for c in cols:
@@ -245,17 +250,35 @@ def main():
                 f'<audio controls preload="none" src="theme.mp3"></audio>'
                 f'<span class="tn">{note}</span></div>')
 
-    # главная
+    # главная: плитки с обложками, клик ведёт в сборник
+    def plural(n, forms=("произведение", "произведения", "произведений")):
+        k = 0 if n % 10 == 1 and n % 100 != 11 else 1 if 2 <= n % 10 <= 4 and not 12 <= n % 100 <= 14 else 2
+        return f"{n} {forms[k]}"
+
+    def blurb(text):
+        """Первая фраза аннотации сборника, без разметки."""
+        t = re.sub(r"[*_>#]", "", text).split("\n\n")[0].strip()
+        m = re.match(r"(.+?[.!?…])(\s|$)", t)
+        return (m.group(1) if m else t)[:200]
+
+    tiles = []
+    for c in cols:
+        name, _, sub = c["title"].partition(". ")
+        cov = (f'<img src="{c["slug"]}/cover.jpg" alt="" loading="lazy">' if c["cover"] else
+               f'<span class="tcover" style="--h:{sum(map(ord, c["slug"])) * 47 % 360}">'
+               f'<span>{html.escape(name[0])}</span></span>')
+        tiles.append(
+            f'<a class="tile" href="{c["slug"]}/index.html"><span class="cv">{cov}</span>'
+            f'<span class="tb"><span class="tt">{html.escape(name)}</span>'
+            + (f'<span class="ts">{html.escape(sub)}</span>' if sub else "")
+            + (f'<span class="ta">{html.escape(blurb(c["about"]))}</span>' if c["about"] else "")
+            + f'<span class="tn">{plural(len([w for w in c["works"] if not w["url"]]))}'
+            + (' · ♪' if c["theme"] else "") + '</span></span></a>')
     parts = ['<section class="hero"><h1>Проза</h1>'
              '<p>Сборники повестей и рассказов. Читать можно бесплатно и без регистрации, '
-             'с телефона или с большого экрана, при свете и в темноте.</p></section>']
-    for c in cols:
-        parts.append(
-            f'<details class="col"><summary><span class="ct">{html.escape(c["title"])}</span>'
-            f'<span class="cn">{len(c["works"])}</span></summary>'
-            + toc(c["works"], c["slug"] + "/") +
-            f'<p class="more"><a href="{c["slug"]}/index.html">Открыть сборник отдельной страницей</a></p></details>')
-    open(f"{OUT}/index.html", "w", encoding="utf-8").write(page(SITE, "\n".join(parts), ""))
+             'с телефона или с большого экрана, при свете и в темноте.</p></section>',
+             '<div class="shelf">' + "\n".join(tiles) + '</div>']
+    open(f"{OUT}/index.html", "w", encoding="utf-8").write(page(SITE, "\n".join(parts), "", wide=True))
 
     # сборники и рассказы
     for c in cols:
