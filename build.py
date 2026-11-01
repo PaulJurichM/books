@@ -4,12 +4,16 @@
 Новый рассказ: положить .md в папку сборника (номер в имени файла задаёт порядок)
 и запустить  python3 build.py
 """
-import html, os, re, shutil
+import datetime, html, json, os, re, shutil
 
 SRC, OUT = "content", "docs"
 AUTHOR = "Павел Юрич"
 SITE = "Павел Юрич. Проза"
 PLACE = "Тбилиси"
+BASE = "https://malari.me/books/"  # адрес сайта: канонические ссылки, карта сайта, RSS, превью
+OG_DEFAULT = "assets/og.jpg"       # картинка превью для главной и страниц без иллюстрации
+PUBLISHED = "published.json"       # даты появления текстов на сайте (для RSS); новые дописываются сами
+URLS = []                          # (адрес, дата) для sitemap.xml
 MONTHS = ("январь февраль март апрель май июнь июль август "
           "сентябрь октябрь ноябрь декабрь").split()
 
@@ -98,18 +102,66 @@ def render(body):
     return "\n".join(out)
 
 
+def plain(text):
+    """Текст без разметки: для описаний в поиске и превью."""
+    t = re.sub(r"\[\^[^\]\s]+\]", "", text)
+    t = re.sub(r"\[([^\]]+)\]\([^)]+\)", r"\1", t)
+    t = re.sub(r"[*_#>]", "", t)
+    return re.sub(r"\s+", " ", t).strip()
+
+
+def snippet(body, limit=180):
+    """Описание страницы: первый обычный абзац текста (без эпиграфов, заголовков и стихов),
+    обрезанный по слову."""
+    body = re.sub(r"^\[\^[^\]\s]+\]:.*$", "", body, flags=re.M)
+    for block in re.split(r"\n\s*\n", body):
+        b = block.strip()
+        if not b or b.startswith(("##", ">", "⁂", "* * *")) or "\n" in b:
+            continue
+        t = plain(b)
+        if len(t) < 80:
+            continue
+        if len(t) > limit:
+            t = t[:limit].rsplit(" ", 1)[0].rstrip(",;:—–- ") + "…"
+        return t
+    return ""
+
+
 def minutes(body):
     return max(1, round(len(body.split()) / 180))
 
 
-def page(title, content, root, crumbs="", wide=False):
+def page(title, content, root, crumbs="", wide=False, url=None, desc="", image="",
+         kind="website", ld=None, date=""):
+    """url — адрес страницы относительно BASE (None: страница не идёт в карту сайта)."""
     mcls = ' class="wide"' if wide else ""
+    head = ""
+    if url is not None:
+        full = BASE + re.sub(r"(^|/)index\.html$", r"\1", url)
+        URLS.append((full, date))
+        img = BASE + (image or OG_DEFAULT)
+        d = html.escape(desc)
+        head = (f'<meta name="description" content="{d}">\n'
+                f'<link rel="canonical" href="{full}">\n'
+                f'<meta property="og:type" content="{kind}">\n'
+                f'<meta property="og:site_name" content="{html.escape(SITE)}">\n'
+                f'<meta property="og:locale" content="ru_RU">\n'
+                f'<meta property="og:title" content="{html.escape(title)}">\n'
+                f'<meta property="og:description" content="{d}">\n'
+                f'<meta property="og:url" content="{full}">\n'
+                f'<meta property="og:image" content="{img}">\n'
+                f'<meta name="twitter:card" content="summary_large_image">\n')
+        if ld:
+            ld = dict(ld, url=full, image=img)
+            head += ('<script type="application/ld+json">'
+                     + json.dumps(ld, ensure_ascii=False).replace("</", "<\\/") + "</script>\n")
     return f"""<!doctype html>
 <html lang="ru">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>{html.escape(title)}</title>
+{head}<link rel="alternate" type="application/rss+xml" title="{html.escape(SITE)}: новые тексты" href="{BASE}feed.xml">
 <script>(function(){{try{{var t=localStorage.getItem('theme');if(t)document.documentElement.dataset.theme=t;var f=localStorage.getItem('fs');if(f)document.documentElement.style.setProperty('--fs',f+'px');}}catch(e){{}}}})();</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -136,13 +188,43 @@ def page(title, content, root, crumbs="", wide=False):
 {content}
 </main>
 <footer>
-  <p>© {AUTHOR}, 2026. Читать можно свободно. <a href="{root}ekranizaciya.html">Экранизация и права</a> · <a href="/">malari.me</a></p>
+  <p>© {AUTHOR}, 2026. Читать можно свободно. <a href="{root}ekranizaciya.html">Экранизация и права</a> · <a href="{BASE}feed.xml">RSS</a> · <a href="/">malari.me</a></p>
 </footer>
 <script src="{root}assets/site.js"></script>
 <script data-goatcounter="https://malari.goatcounter.com/count" async src="https://gc.zgo.at/count.js"></script>
 </body>
 </html>
 """
+
+PERSON = {"@type": "Person", "name": AUTHOR, "alternateName": "Павел Мальков", "url": "https://malari.me/"}
+
+
+def write_sitemap():
+    rows = []
+    for u, d in URLS:
+        rows.append(f"<url><loc>{html.escape(u)}</loc>" + (f"<lastmod>{d}</lastmod>" if d else "") + "</url>")
+    open(f"{OUT}/sitemap.xml", "w", encoding="utf-8").write(
+        '<?xml version="1.0" encoding="UTF-8"?>\n'
+        '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n' + "\n".join(rows) + "\n</urlset>\n")
+
+
+def write_feed(items, limit=30):
+    """RSS: последние тексты, появившиеся на сайте (дата из published.json)."""
+    items = sorted(items, key=lambda x: (x["date"], x["order"]), reverse=True)[:limit]
+    def rfc(d):
+        dt = datetime.datetime.strptime(d, "%Y-%m-%d").replace(hour=12, tzinfo=datetime.timezone.utc)
+        return dt.strftime("%a, %d %b %Y %H:%M:%S +0000")
+    rows = [f"<item><title>{html.escape(x['title'])}</title><link>{x['url']}</link>"
+            f"<guid isPermaLink=\"true\">{x['url']}</guid><pubDate>{rfc(x['date'])}</pubDate>"
+            f"<description>{html.escape(x['desc'])}</description></item>" for x in items]
+    open(f"{OUT}/feed.xml", "w", encoding="utf-8").write(
+        '<?xml version="1.0" encoding="UTF-8"?>\n<rss version="2.0" '
+        'xmlns:atom="http://www.w3.org/2005/Atom"><channel>'
+        f"<title>{html.escape(SITE)}</title><link>{BASE}</link>"
+        "<description>Новые повести и рассказы на сайте</description><language>ru</language>"
+        f'<atom:link href="{BASE}feed.xml" rel="self" type="application/rss+xml"/>'
+        + "".join(rows) + "</channel></rss>\n")
+
 
 def toc(works, prefix, cls=""):
     """Оглавление сборника. Если в сборнике есть разделы (section в шапке файла),
@@ -234,7 +316,7 @@ def main():
             os.makedirs(f"{OUT}/{slug}", exist_ok=True)
             shutil.copy(os.path.join(p, "cover.jpg"), f"{OUT}/{slug}/cover.jpg")
         cols.append({"slug": slug, "title": cmeta.get("title", d), "about": cbody, "works": works,
-                     "theme": theme, "cover": cover})
+                     "theme": theme, "cover": cover, "desc": cmeta.get("description", "")})
 
     # главная тема цикла: копия трека и плеер на страницах сборника
     for c in cols:
@@ -278,16 +360,29 @@ def main():
              '<p>Сборники повестей и рассказов. Читать можно бесплатно и без регистрации, '
              'с телефона или с большого экрана, при свете и в темноте.</p></section>',
              '<div class="shelf">' + "\n".join(tiles) + '</div>']
-    open(f"{OUT}/index.html", "w", encoding="utf-8").write(page(SITE, "\n".join(parts), "", wide=True))
+    open(f"{OUT}/index.html", "w", encoding="utf-8").write(page(
+        SITE, "\n".join(parts), "", wide=True, url="index.html",
+        desc="Повести и рассказы Павла Юрича: детективы о старом Тифлисе, Риме и Китае, "
+             "истории об инспекторе Морсе, хоррор, проза о Грузии. Читать бесплатно, без регистрации.",
+        ld={"@context": "https://schema.org", "@type": "WebSite", "name": SITE, "inLanguage": "ru",
+            "author": PERSON}))
 
     # сборники и рассказы
+    published = json.load(open(PUBLISHED, encoding="utf-8")) if os.path.exists(PUBLISHED) else {}
+    today = datetime.date.today().isoformat()
+    feed = []
     for c in cols:
         os.makedirs(f"{OUT}/{c['slug']}", exist_ok=True)
         about = render(c["about"]) if c["about"] else ""
         body = f'<h1>{html.escape(c["title"])}</h1>{theme(c, "Включите перед чтением — как заставку сериала")}{about}{toc(c["works"], "", "toc")}'
         crumbs = '<p class="crumbs"><a href="../index.html">Все сборники</a></p>'
+        cdesc = c["desc"] or ((snippet(c["about"], 200) or plain(blurb(c["about"]))) if c["about"] else "")
+        cdesc = cdesc or f"Сборник прозы Павла Юрича «{c['title']}». Читать бесплатно."
         open(f"{OUT}/{c['slug']}/index.html", "w", encoding="utf-8").write(
-            page(f'{c["title"]} — {AUTHOR}', body, "../", crumbs))
+            page(f'{c["title"]} — {AUTHOR}', body, "../", crumbs, url=f"{c['slug']}/index.html",
+                 desc=cdesc, image=f"{c['slug']}/cover.jpg" if c["cover"] else "",
+                 ld={"@context": "https://schema.org", "@type": "Book", "name": c["title"],
+                     "inLanguage": "ru", "author": PERSON, "isAccessibleForFree": True}))
         # старые адреса (сборник раньше был отдельным): страницы-переадресации
         alias = ""
         for w in c["works"]:
@@ -320,15 +415,36 @@ def main():
                        + (f'<figcaption>{html.escape(w["caption"])}</figcaption>' if w["caption"] else "") + "</figure>"
                        if w["pic"] else "")
                     + f'{render(w["body"])}{signature(w["written"], w["revised"])}</article>{nav}')
+            short = c["title"].partition(". ")[0]
+            wtitle = (f'{w["title"]} — {AUTHOR}' if w["title"] == short
+                      else f'{w["title"]} — {short} — {AUTHOR}')
+            key = f'{c["slug"]}/{w["slug"]}'
+            published.setdefault(key, today)
+            desc = snippet(w["body"]) or f'{w["title"]}: из сборника «{c["title"]}»'
+            feed.append({"title": f'{w["title"]} — {short}', "url": BASE + key + ".html",
+                         "date": published[key], "desc": desc, "order": len(feed)})
             open(f"{OUT}/{c['slug']}/{w['slug']}.html", "w", encoding="utf-8").write(
-                page(f'{w["title"]} — {AUTHOR}', body, "../", crumbs))
+                page(wtitle, body, "../", crumbs, url=key + ".html", desc=desc, kind="article",
+                     image=(f'{c["slug"]}/{w["pic"]}' if w["pic"] else
+                            f'{c["slug"]}/cover.jpg' if c["cover"] else ""),
+                     date=published[key],
+                     ld={"@context": "https://schema.org", "@type": "CreativeWork", "name": w["title"],
+                         "inLanguage": "ru", "author": PERSON, "isAccessibleForFree": True,
+                         "isPartOf": {"@type": "Book", "name": c["title"], "url": f'{BASE}{c["slug"]}/'}}))
 
     # отдельные страницы
     for f in sorted(os.listdir("pages")):
         meta, body = read(os.path.join("pages", f))
         open(f"{OUT}/{f[:-3]}.html", "w", encoding="utf-8").write(
             page(f'{meta.get("title", "")} — {AUTHOR}',
-                 f'<article class="plain"><h1>{html.escape(meta.get("title", ""))}</h1>{body}</article>', ""))
+                 f'<article class="plain"><h1>{html.escape(meta.get("title", ""))}</h1>{body}</article>', "",
+                 url=f"{f[:-3]}.html", desc=meta.get("description", "") or plain(re.sub(r"<[^>]+>", " ", body))[:180]))
+
+    # даты появления на сайте: новые тексты получают сегодняшнюю
+    json.dump(dict(sorted(published.items())), open(PUBLISHED, "w", encoding="utf-8"),
+              ensure_ascii=False, indent=1)
+    write_sitemap()
+    write_feed(feed)
 
     n = sum(len(c["works"]) for c in cols)
     print(f"Готово: сборников {len(cols)}, произведений {n} → {OUT}/")
