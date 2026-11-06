@@ -16,6 +16,25 @@ PUBLISHED = "published.json"       # даты появления текстов 
 URLS = []                          # (адрес, дата) для sitemap.xml
 MONTHS = ("январь февраль март апрель май июнь июль август "
           "сентябрь октябрь ноябрь декабрь").split()
+MONTHS_GEN = ("января февраля марта апреля мая июня июля августа "
+              "сентября октября ноября декабря").split()
+
+# Полки главной страницы, в этом порядке. Сборник встаёт на полку строкой «shelf: id»
+# в _collection.md, место на полке — «place: N». Сборник без полки идёт карточкой «Вне циклов».
+SHELVES = [
+    ("history", "Исторические детективы",
+     "Древний Рим, Китай эпохи Тан, Тифлис 1904 года, Москва 1919-го и Берлин 1936-го. По эпохам."),
+    ("oxford", "Оксфорд: Морс и Льюис",
+     "Одна вселенная длиной больше ста лет: от деда инспектора Морса до Льюиса после службы. "
+     "Полка идёт по годам жизни героев, читать можно подряд."),
+    ("homage", "Поклоны", "Рассказы в мирах и манере любимых писателей."),
+    ("dark", "Тёмное", "Хоррор и триллеры. То, что находит тебя само и не отпускает."),
+    ("home", "Здесь и тогда", "Дом, двор и застолье в Грузии — и байки из прошлой жизни."),
+]
+# «unit:» в _collection.md: чем считать тексты сборника на плитке
+UNITS = {"рассказ": ("рассказ", "рассказа", "рассказов"), "повесть": ("повесть", "повести", "повестей"),
+         "глава": ("глава", "главы", "глав"), "дело": ("дело", "дела", "дел")}
+EXTRA = ("От автора", "Предисловие", "Послесловие")  # не считаются в числе текстов
 
 
 def read(path):
@@ -316,7 +335,12 @@ def main():
             os.makedirs(f"{OUT}/{slug}", exist_ok=True)
             shutil.copy(os.path.join(p, "cover.jpg"), f"{OUT}/{slug}/cover.jpg")
         cols.append({"slug": slug, "title": cmeta.get("title", d), "about": cbody, "works": works,
-                     "theme": theme, "cover": cover, "desc": cmeta.get("description", "")})
+                     "theme": theme, "cover": cover, "desc": cmeta.get("description", ""),
+                     # место на главной (см. SHELVES) и подпись плитки
+                     "shelf": cmeta.get("shelf", ""), "place": float(cmeta.get("place", "0") or 0),
+                     "kind": cmeta.get("kind", ""), "unit": cmeta.get("unit", ""),
+                     "years": cmeta.get("years", ""), "status": cmeta.get("status", ""),
+                     "count_prefix": cmeta.get("count_prefix", "")})
 
     # главная тема цикла: копия трека и плеер на страницах сборника
     for c in cols:
@@ -343,23 +367,114 @@ def main():
         m = re.match(r"(.+?[.!?…])(\s|$)", t)
         return (m.group(1) if m else t)[:200]
 
-    tiles = []
+    published = json.load(open(PUBLISHED, encoding="utf-8")) if os.path.exists(PUBLISHED) else {}
+    today = datetime.date.today().isoformat()
+
+    def count(c):
+        """Сколько в сборнике единиц (рассказов, глав…): без предисловий, послесловий,
+        параграфов учебника и внешних ссылок; count_prefix — считать только файлы с таким началом."""
+        ws = [w for w in c["works"] if not w["url"] and w["title"] not in EXTRA
+              and not w["title"].startswith("§")]
+        if c["count_prefix"]:
+            ws = [w for w in ws if w["slug"].startswith(c["count_prefix"])]
+        return len(ws)
+
+    def label(c):
+        n = count(c)
+        what = plural(n, UNITS[c["unit"]]) if c["unit"] in UNITS else plural(n)
+        return " · ".join(x for x in (c["kind"], what, c["status"]) if x)
+
+    # «Новое на сайте»: три сборника, где тексты появлялись последними (даты из published.json)
+    fresh = []
     for c in cols:
+        reads = [w for w in c["works"] if not w["url"]]
+        if not reads:
+            continue
+        dated = [(published.get(f'{c["slug"]}/{w["slug"]}', today), i, w) for i, w in enumerate(reads)]
+        last = max(d for d, _, _ in dated)
+        day = [w for d, _, w in dated if d == last]
+        fresh.append((last, c, day))
+    fresh = sorted(fresh, key=lambda x: x[0], reverse=True)[:3]
+    fresh_slugs = {c["slug"] for _, c, _ in fresh}
+
+    def cover_html(c, name):
+        return (f'<img src="{c["slug"]}/cover.jpg" alt="" loading="lazy">' if c["cover"] else
+                f'<span class="tcover" style="--h:{sum(map(ord, c["slug"])) * 47 % 360}">'
+                f'<span>{html.escape(name[0])}</span></span>')
+
+    PLAY = ('<svg class="i-play" width="16" height="16" viewBox="0 0 16 16" aria-hidden="true">'
+            '<path d="M4.5 2.5v11l9-5.5z" fill="currentColor"/></svg>'
+            '<svg class="i-pause" width="16" height="16" viewBox="0 0 16 16" aria-hidden="true">'
+            '<rect x="3" y="2" width="3.5" height="12" rx="1" fill="currentColor"/>'
+            '<rect x="9.5" y="2" width="3.5" height="12" rx="1" fill="currentColor"/></svg>')
+
+    def tile(c, chips=True):
         name, _, sub = c["title"].partition(". ")
-        cov = (f'<img src="{c["slug"]}/cover.jpg" alt="" loading="lazy">' if c["cover"] else
-               f'<span class="tcover" style="--h:{sum(map(ord, c["slug"])) * 47 % 360}">'
-               f'<span>{html.escape(name[0])}</span></span>')
-        tiles.append(
-            f'<a class="tile" href="{c["slug"]}/index.html"><span class="cv">{cov}</span>'
-            f'<span class="tb"><span class="tt">{html.escape(name)}</span>'
-            + (f'<span class="ts">{html.escape(sub)}</span>' if sub else "")
-            + (f'<span class="ta">{html.escape(blurb(c["about"]))}</span>' if c["about"] else "")
-            + f'<span class="tn">{plural(len([w for w in c["works"] if not w["url"]]))}'
-            + (' · ♪' if c["theme"] else "") + '</span></span></a>')
+        badges = ""
+        if chips:
+            badges = ((f'<span class="ty">{html.escape(c["years"])}</span>' if c["years"] else "")
+                      + ('<span class="tnew">новое</span>' if c["slug"] in fresh_slugs else ""))
+            badges = f'<span class="tch">{badges}</span>' if badges else ""
+        play = (f'<button class="tplay" type="button" data-src="{c["slug"]}/theme.mp3" aria-pressed="false" '
+                f'aria-label="Главная тема «{html.escape(name)}»" title="Главная тема цикла">{PLAY}</button>'
+                if c["theme"] else "")
+        return (f'<div class="tw"><a class="tile" href="{c["slug"]}/index.html"><span class="cv">{cover_html(c, name)}</span>'
+                f'{badges}<span class="tb"><span class="tt">{html.escape(name)}</span>'
+                + (f'<span class="ts">{html.escape(sub)}</span>' if sub else "")
+                + (f'<span class="ta">{html.escape(blurb(c["about"]))}</span>' if c["about"] else "")
+                + f'<span class="tn">{html.escape(label(c))}</span></span></a>{play}</div>')
+
+    def day_ru(d):
+        y, m, dd = map(int, d.split("-"))
+        return f"{dd} {MONTHS_GEN[m - 1]}"
+
+    fcards = []
+    for last, c, day in fresh:
+        name = c["title"].partition(". ")[0]
+        main_ = [x for x in day if x["title"] not in EXTRA] or day
+        w = main_[-1]  # последний текст дня, послесловие не в счёт
+        what = f"«{w['title']}»" if w["title"] != name else "Новый текст"
+        if len(day) > 1:
+            what += " и ещё " + plural(len(day) - 1, UNITS.get(c["unit"], ("текст", "текста", "текстов")))
+        fcards.append(f'<a class="fc" href="{c["slug"]}/{w["slug"]}.html">'
+                      f'<span class="fi">{cover_html(c, name)}</span>'
+                      f'<span class="fb"><span class="fd">{day_ru(last)}</span>'
+                      f'<span class="ft">{html.escape(name)}</span>'
+                      f'<span class="fw">{html.escape(what)}</span></span></a>')
+
+    shelves, chips = [], []
+    for sid, sname, sdesc in SHELVES:
+        cs = sorted((c for c in cols if c["shelf"] == sid), key=lambda c: c["place"])
+        if not cs:
+            continue
+        chips.append(f'<a class="chip" href="#sh-{sid}">{html.escape(sname)}</a>')
+        shelves.append(f'<section class="sh" id="sh-{sid}"><div class="shh"><h2>{html.escape(sname)}</h2>'
+                       f'<span class="shn">{plural(len(cs), ("книга", "книги", "книг"))}</span></div>'
+                       f'<p class="shd">{html.escape(sdesc)}</p>'
+                       '<div class="shelf row">' + "\n".join(tile(c) for c in cs) + '</div></section>')
+    known = {s[0] for s in SHELVES}
+    for c in cols:  # сборники без полки: широкая карточка «Вне циклов» внизу
+        if c["shelf"] in known:
+            continue
+        name = c["title"].partition(". ")[0]
+        shelves.append(f'<a class="wcard" href="{c["slug"]}/index.html"><span class="wi">{cover_html(c, name)}</span>'
+                       f'<span class="wb"><span class="kick">Вне циклов</span><span class="wt">{html.escape(name)}</span>'
+                       + (f'<span class="wd">{html.escape(blurb(c["about"]))}</span>' if c["about"] else "")
+                       + '</span><span class="wn">' + html.escape(label(c))
+                       + (' · новое' if c["slug"] in fresh_slugs else "") + ' →</span></a>')
+
     parts = ['<section class="hero"><h1>Проза</h1>'
              '<p>Сборники повестей и рассказов. Читать можно бесплатно и без регистрации, '
              'с телефона или с большого экрана, при свете и в темноте.</p></section>',
-             '<div class="shelf">' + "\n".join(tiles) + '</div>']
+             '<section class="fresh" aria-labelledby="fresh-h"><h2 class="kick" id="fresh-h">Новое на сайте</h2>'
+             '<div class="fr">' + "\n".join(fcards) + '</div></section>',
+             '<div class="bar"><nav class="chips" id="chips" aria-label="Полки">' + "".join(chips) + '</nav>'
+             '<p class="wnote" id="wnote" hidden>Все сборники в том порядке, в каком писались</p>'
+             '<div class="seg" role="group" aria-label="Как показывать сборники">'
+             '<button type="button" data-view="shelves" aria-pressed="true">По полкам</button>'
+             '<button type="button" data-view="written" aria-pressed="false">По времени написания</button></div></div>',
+             '<div id="v-shelves">' + "\n".join(shelves) + '</div>',
+             '<div id="v-written" hidden><div class="shelf">' + "\n".join(tile(c, False) for c in cols) + '</div></div>']
     open(f"{OUT}/index.html", "w", encoding="utf-8").write(page(
         SITE, "\n".join(parts), "", wide=True, url="index.html",
         desc="Повести и рассказы Павла Юрича: детективы о старом Тифлисе, Риме и Китае, "
@@ -368,8 +483,6 @@ def main():
             "author": PERSON}))
 
     # сборники и рассказы
-    published = json.load(open(PUBLISHED, encoding="utf-8")) if os.path.exists(PUBLISHED) else {}
-    today = datetime.date.today().isoformat()
     feed = []
     for c in cols:
         os.makedirs(f"{OUT}/{c['slug']}", exist_ok=True)
