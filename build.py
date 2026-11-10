@@ -192,10 +192,10 @@ def page(title, content, root, crumbs="", wide=False, url=None, desc="", image="
 </head>
 <body>
 <header class="top">
-  <a class="brand" href="{root}index.html">{AUTHOR}</a>
+  <a class="brand" href="{root or './'}">{AUTHOR}</a>
   <nav>
     <a href="/creative/">← Творчество</a>
-    <a href="{root}index.html">Сборники</a>
+    <a href="{root or './'}">Сборники</a>
     <a href="{root}ekranizaciya.html">Экранизация</a>
     <button class="ctl" id="fs-down" type="button" aria-label="Уменьшить шрифт">A−</button>
     <button class="ctl" id="fs-up" type="button" aria-label="Увеличить шрифт">A+</button>
@@ -418,7 +418,7 @@ def main():
         play = (f'<button class="tplay" type="button" data-src="{c["slug"]}/theme.mp3" aria-pressed="false" '
                 f'aria-label="Главная тема «{html.escape(name)}»" title="Главная тема цикла">{PLAY}</button>'
                 if c["theme"] else "")
-        return (f'<div class="tw"><a class="tile" href="{c["slug"]}/index.html"><span class="cv">{cover_html(c, name)}</span>'
+        return (f'<div class="tw"><a class="tile" href="{c["slug"]}/"><span class="cv">{cover_html(c, name)}</span>'
                 f'{badges}<span class="tb"><span class="tt">{html.escape(name)}</span>'
                 + (f'<span class="ts">{html.escape(sub)}</span>' if sub else "")
                 + (f'<span class="ta">{html.escape(blurb(c["about"]))}</span>' if c["about"] else "")
@@ -457,7 +457,7 @@ def main():
         if c["shelf"] in known:
             continue
         name = c["title"].partition(". ")[0]
-        shelves.append(f'<a class="wcard" href="{c["slug"]}/index.html"><span class="wi">{cover_html(c, name)}</span>'
+        shelves.append(f'<a class="wcard" href="{c["slug"]}/"><span class="wi">{cover_html(c, name)}</span>'
                        f'<span class="wb"><span class="kick">Вне циклов</span><span class="wt">{html.escape(name)}</span>'
                        + (f'<span class="wd">{html.escape(blurb(c["about"]))}</span>' if c["about"] else "")
                        + '</span><span class="wn">' + html.escape(label(c))
@@ -488,7 +488,7 @@ def main():
         os.makedirs(f"{OUT}/{c['slug']}", exist_ok=True)
         about = render(c["about"]) if c["about"] else ""
         body = f'<h1>{html.escape(c["title"])}</h1>{theme(c, "Включите перед чтением — как заставку сериала")}{about}{toc(c["works"], "", "toc")}'
-        crumbs = '<p class="crumbs"><a href="../index.html">Все сборники</a></p>'
+        crumbs = '<p class="crumbs"><a href="../">Все сборники</a></p>'
         cdesc = c["desc"] or ((snippet(c["about"], 200) or plain(blurb(c["about"]))) if c["about"] else "")
         cdesc = cdesc or f"Сборник прозы Павла Юрича «{c['title']}». Читать бесплатно."
         open(f"{OUT}/{c['slug']}/index.html", "w", encoding="utf-8").write(
@@ -503,7 +503,7 @@ def main():
             if alias:
                 os.makedirs(f"{OUT}/{alias}", exist_ok=True)
                 for name, to in ((w["slug"], f'../{c["slug"]}/{w["slug"]}.html'),
-                                 ("index", f'../{c["slug"]}/index.html')):
+                                 ("index", f'../{c["slug"]}/')):
                     open(f"{OUT}/{alias}/{name}.html", "w", encoding="utf-8").write(
                         f'<!doctype html><html lang="ru"><meta charset="utf-8">'
                         f'<meta http-equiv="refresh" content="0; url={to}">'
@@ -517,10 +517,10 @@ def main():
             nav += (f'<a class="prev" href="{prev["slug"]}.html"><small>Назад</small>{html.escape(prev["title"])}</a>'
                     if prev else '<span></span>')
             nav += (f'<a class="next" href="{nxt["slug"]}.html"><small>Дальше</small>{html.escape(nxt["title"])}</a>'
-                    if nxt else f'<a class="next" href="index.html"><small>Конец сборника</small>К оглавлению</a>')
+                    if nxt else f'<a class="next" href="./"><small>Конец сборника</small>К оглавлению</a>')
             nav += "</nav>"
-            crumbs = (f'<p class="crumbs"><a href="../index.html">Все сборники</a> · '
-                      f'<a href="index.html">{html.escape(c["title"])}</a></p>')
+            crumbs = (f'<p class="crumbs"><a href="../">Все сборники</a> · '
+                      f'<a href="./">{html.escape(c["title"])}</a></p>')
             body = (f'<article><h1>{html.escape(w["title"])}</h1>'
                     f'<p class="meta">{AUTHOR} · около {w["min"]} мин чтения</p>'
                     + theme(c, "Заставка")
