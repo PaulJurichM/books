@@ -5,7 +5,6 @@ shelf: history
 place: 6
 kind: роман
 unit: глава
-status: пишется
 years: 1960
 ---
 
