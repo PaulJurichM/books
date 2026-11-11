@@ -499,6 +499,16 @@ def main():
         # старые адреса (сборник раньше был отдельным): страницы-переадресации
         alias = ""
         for w in c["works"]:
+            if "/" in w["alias"]:  # «alias: сборник/рассказ» — переехал один рассказ, а не весь сборник
+                old_dir, old_name = w["alias"].split("/", 1)
+                to = f'../{c["slug"]}/{w["slug"]}.html'
+                os.makedirs(f"{OUT}/{old_dir}", exist_ok=True)
+                open(f"{OUT}/{old_dir}/{old_name}.html", "w", encoding="utf-8").write(
+                    f'<!doctype html><html lang="ru"><meta charset="utf-8">'
+                    f'<meta http-equiv="refresh" content="0; url={to}">'
+                    f'<link rel="canonical" href="{to}"><title>{html.escape(w["title"])}</title>'
+                    f'<p><a href="{to}">Страница переехала</a></p></html>')
+                continue
             alias = w["alias"] or alias
             if alias:
                 os.makedirs(f"{OUT}/{alias}", exist_ok=True)
