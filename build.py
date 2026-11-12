@@ -341,7 +341,9 @@ def main():
                      "shelf": cmeta.get("shelf", ""), "place": float(cmeta.get("place", "0") or 0),
                      "kind": cmeta.get("kind", ""), "unit": cmeta.get("unit", ""),
                      "years": cmeta.get("years", ""), "status": cmeta.get("status", ""),
-                     "count_prefix": cmeta.get("count_prefix", "")})
+                     "count_prefix": cmeta.get("count_prefix", ""),
+                     # sign: last — подпись «Тбилиси, месяц год» только у последнего текста сборника
+                     "sign": cmeta.get("sign", "")})
 
     # главная тема цикла: копия трека и плеер на страницах сборника
     for c in cols:
@@ -538,7 +540,7 @@ def main():
                     + (f'<figure><img src="{w["pic"]}" alt="{html.escape(w["caption"] or "Иллюстрация к рассказу «" + w["title"] + "»")}" loading="lazy">'
                        + (f'<figcaption>{html.escape(w["caption"])}</figcaption>' if w["caption"] else "") + "</figure>"
                        if w["pic"] else "")
-                    + f'{render(w["body"])}{signature(w["written"], w["revised"])}</article>{nav}')
+                    + f'{render(w["body"])}{"" if c["sign"] == "last" and nxt else signature(w["written"], w["revised"])}</article>{nav}')
             short = c["title"].partition(". ")[0]
             wtitle = (f'{w["title"]} — {AUTHOR}' if w["title"] == short
                       else f'{w["title"]} — {short} — {AUTHOR}')
