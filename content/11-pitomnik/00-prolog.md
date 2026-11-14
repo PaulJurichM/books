@@ -1,5 +1,4 @@
 ---
-written: 2026-10
 title: Пролог. «Самшит»
 date: 31.10.2026
 nonum: yes
