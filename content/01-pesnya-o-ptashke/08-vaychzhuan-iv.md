@@ -1,5 +1,5 @@
 ---
-written: 2025-05
+written: 2025-02
 revised: 2026-10
 title: Вайчжуань IV
 source: https://proza.ru/2026/06/07/1897

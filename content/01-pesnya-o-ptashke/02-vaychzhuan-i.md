@@ -1,5 +1,5 @@
 ---
-written: 2025-04
+written: 2025-01
 revised: 2026-10
 title: Вайчжуань I
 source: https://proza.ru/2026/06/07/1889

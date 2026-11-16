@@ -1,5 +1,5 @@
 ---
-written: 2025-08
+written: 2025-09
 title: Архив
 source: https://proza.ru/2026/10/05/2175
 date: 05.10.2026

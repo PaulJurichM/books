@@ -1,5 +1,5 @@
 ---
-written: 2025-05
+written: 2025-06
 revised: 2026-10
 title: Дело о трех дорогах
 source: https://proza.ru/2026/06/10/1751

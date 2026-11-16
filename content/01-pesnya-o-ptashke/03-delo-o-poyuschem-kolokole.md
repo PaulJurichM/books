@@ -1,5 +1,5 @@
 ---
-written: 2025-02
+written: 2025-01
 revised: 2026-10
 title: Дело о поющем колоколе
 source: https://proza.ru/2026/05/08/1682

@@ -1,5 +1,5 @@
 ---
-written: 2025-05
+written: 2025-03
 revised: 2026-10
 title: Вайчжуань VI
 source: https://proza.ru/2026/06/08/1064

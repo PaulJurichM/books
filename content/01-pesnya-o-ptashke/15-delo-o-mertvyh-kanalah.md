@@ -1,5 +1,5 @@
 ---
-written: 2025-03
+written: 2025-04
 revised: 2026-10
 alias: mertvye-kanaly
 title: Дело о мертвых каналах

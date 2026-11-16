@@ -1,5 +1,5 @@
 ---
-written: 2025-04
+written: 2025-07
 title: Сигнатура
 source: https://proza.ru/2026/10/04/114
 date: 04.10.2026

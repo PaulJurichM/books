@@ -1,5 +1,5 @@
 ---
-written: 2025-04
+written: 2025-02
 revised: 2026-10
 title: Вайчжуань II
 source: https://proza.ru/2026/06/07/1892

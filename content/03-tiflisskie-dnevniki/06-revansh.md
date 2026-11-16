@@ -1,5 +1,5 @@
 ---
-written: 2025-06
+written: 2025-08
 title: Реванш
 source: https://proza.ru/2026/10/05/2011
 date: 05.10.2026

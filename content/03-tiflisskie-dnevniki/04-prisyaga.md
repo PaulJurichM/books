@@ -1,5 +1,5 @@
 ---
-written: 2025-05
+written: 2025-08
 title: Присяга
 source: https://proza.ru/2026/10/04/2120
 date: 04.10.2026

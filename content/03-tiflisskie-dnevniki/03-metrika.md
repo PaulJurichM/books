@@ -1,5 +1,5 @@
 ---
-written: 2025-05
+written: 2025-07
 title: Метрика
 source: https://proza.ru/2026/10/04/2044
 date: 04.10.2026

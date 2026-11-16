@@ -1,5 +1,5 @@
 ---
-written: 2025-07
+written: 2025-09
 title: Волк
 source: https://proza.ru/2026/10/05/2157
 date: 05.10.2026

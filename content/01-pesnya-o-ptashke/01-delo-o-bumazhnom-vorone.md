@@ -1,5 +1,5 @@
 ---
-written: 2025-02
+written: 2025-01
 revised: 2026-10
 title: Дело о бумажном вороне
 source: https://proza.ru/2026/05/07/1853

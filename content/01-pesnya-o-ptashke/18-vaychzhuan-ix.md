@@ -1,5 +1,5 @@
 ---
-written: 2025-06
+written: 2025-04
 revised: 2026-10
 title: Вайчжуань IX
 source: https://proza.ru/2026/06/12/1871

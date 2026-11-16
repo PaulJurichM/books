@@ -1,5 +1,5 @@
 ---
-written: 2025-06
+written: 2025-05
 revised: 2026-10
 title: Вайчжуань XI
 date: 08.10.2026
