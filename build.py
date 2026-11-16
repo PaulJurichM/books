@@ -75,10 +75,20 @@ def month(s):
     return f"{MONTHS[int(m.group(2)) - 1]} {m.group(1)}" if m else ""
 
 
-def signature(written, revised=""):
+def span(a, b):
+    """written + until: «апрель — май 2026», через год — «ноябрь 2025 — январь 2026»."""
+    ma, mb = re.match(r"(\d{4})-(\d{2})$", a or ""), re.match(r"(\d{4})-(\d{2})$", b or "")
+    if not (ma and mb):
+        return month(a)
+    if ma.group(1) == mb.group(1):
+        return f"{MONTHS[int(ma.group(2)) - 1]} — {month(b)}"
+    return f"{month(a)} — {month(b)}"
+
+
+def signature(written, revised="", until=""):
     """Подпись в конце текста: written: 2025-03 → «Тбилиси, март 2025»;
     с revised: 2026-10 → «Тбилиси, март 2025 — октябрь 2026» (новая редакция)."""
-    w, r = month(written), month(revised)
+    w, r = (span(written, until) if until else month(written)), month(revised)
     if not w:
         return ""
     return f'<p class="sign"><em>{PLACE}, {w}{" — " + r if r else ""}</em></p>'
@@ -326,7 +336,7 @@ def main():
                           "caption": meta.get("caption", ""),
                           "section": bool(meta.get("section", "")),
                           "part": meta.get("part", ""), "nonum": bool(meta.get("nonum", "")), "url": meta.get("url", ""),
-                          "alias": meta.get("alias", ""), "written": meta.get("written", ""), "revised": meta.get("revised", "")})
+                          "alias": meta.get("alias", ""), "written": meta.get("written", ""), "revised": meta.get("revised", ""), "until": meta.get("until", "")})
         theme = os.path.exists(os.path.join(p, "theme.mp3"))  # главная тема цикла (Suno)
         cover = os.path.exists(os.path.join(p, "cover.jpg"))  # обложка плитки (make_covers.py)
         img = os.path.join(p, "images")
@@ -540,7 +550,7 @@ def main():
                     + (f'<figure><img src="{w["pic"]}" alt="{html.escape(w["caption"] or "Иллюстрация к рассказу «" + w["title"] + "»")}" loading="lazy">'
                        + (f'<figcaption>{html.escape(w["caption"])}</figcaption>' if w["caption"] else "") + "</figure>"
                        if w["pic"] else "")
-                    + f'{render(w["body"])}{"" if c["sign"] == "last" and nxt else signature(w["written"], w["revised"])}</article>{nav}')
+                    + f'{render(w["body"])}{"" if c["sign"] == "last" and nxt else signature(w["written"], w["revised"], w["until"])}</article>{nav}')
             short = c["title"].partition(". ")[0]
             wtitle = (f'{w["title"]} — {AUTHOR}' if w["title"] == short
                       else f'{w["title"]} — {short} — {AUTHOR}')

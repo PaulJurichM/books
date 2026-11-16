@@ -1,5 +1,5 @@
 ---
-written: 2026-11
+written: 2026-10
 title: Петров день
 date: 03.11.2026
 caption: Аист на столбе. Фото: Michael L. Shapiro, Wikimedia Commons, общественное достояние (CC0)

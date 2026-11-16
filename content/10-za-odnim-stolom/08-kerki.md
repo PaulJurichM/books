@@ -1,5 +1,5 @@
 ---
-written: 2026-11
+written: 2026-09
 title: Керки
 date: 02.11.2026
 caption: Кизил. Фото: Plenuska, Wikimedia Commons, лицензия CC BY-SA 4.0

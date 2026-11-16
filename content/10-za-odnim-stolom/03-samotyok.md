@@ -1,5 +1,5 @@
 ---
-written: 2026-10
+written: 2026-07
 title: Самотёк
 date: 29.10.2026
 caption: Цоликоури. Фото: M., Wikimedia Commons, лицензия CC BY-SA 4.0

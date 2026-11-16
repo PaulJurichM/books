@@ -1,5 +1,5 @@
 ---
-written: 2026-11
+written: 2026-09
 title: В четыре руки
 date: 02.11.2026
 caption: Ахалцихе, вид с крепости. Фото: Aleksey Muhranoff, Wikimedia Commons, лицензия CC BY-SA 3.0

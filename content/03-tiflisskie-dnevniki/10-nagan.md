@@ -1,5 +1,5 @@
 ---
-written: 2026-08
+written: 2025-09
 title: Наган
 source: https://proza.ru/2026/10/05/2225
 date: 05.10.2026

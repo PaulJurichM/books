@@ -1,5 +1,5 @@
 ---
-written: 2026-11
+written: 2026-10
 title: Ганатехи
 date: 02.11.2026
 caption: Историческая синагога в Они. Фото: Alexkom000, Wikimedia Commons, лицензия CC BY 4.0

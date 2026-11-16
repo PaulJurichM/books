@@ -1,5 +1,5 @@
 ---
-written: 2026-10
+written: 2026-08
 title: Сач
 date: 29.10.2026
 caption: Сирон. Фото: E4024, Wikimedia Commons, лицензия CC BY-SA 4.0

@@ -1,5 +1,5 @@
 ---
-written: 2026-10
+written: 2026-07
 title: Ладонь
 date: 29.10.2026
 caption: Отжим пивного сусла через мешки, Хевсурети. Фото: Surprizi, Wikimedia Commons, лицензия CC BY-SA 4.0

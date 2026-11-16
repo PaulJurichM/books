@@ -1,5 +1,6 @@
 ---
-written: 2026-10
+until: 2026-09
+written: 2026-08
 title: От автора
 date: 31.10.2026
 nonum: yes

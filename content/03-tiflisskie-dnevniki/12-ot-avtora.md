@@ -1,5 +1,5 @@
 ---
-written: 2026-08
+written: 2025-10
 title: От автора
 source: 
 date: 

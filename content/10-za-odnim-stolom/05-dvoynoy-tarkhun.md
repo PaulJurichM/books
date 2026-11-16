@@ -1,5 +1,5 @@
 ---
-written: 2026-10
+written: 2026-08
 title: Двойной тархун
 date: 29.10.2026
 caption: Воды Лагидзе. Фото: Vyacheslav Argenberg, Wikimedia Commons, лицензия CC BY 4.0
