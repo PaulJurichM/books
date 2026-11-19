@@ -162,16 +162,18 @@ def minutes(body):
 
 
 def page(title, content, root, crumbs="", wide=False, url=None, desc="", image="",
-         kind="website", ld=None, date=""):
-    """url — адрес страницы относительно BASE (None: страница не идёт в карту сайта)."""
+         kind="website", ld=None, date="", hidden=False):
+    """url — адрес страницы относительно BASE (None: страница не идёт в карту сайта).
+    hidden — страница только по прямой ссылке: не в карте сайта, с запретом индексации."""
     mcls = ' class="wide"' if wide else ""
-    head = ""
+    head = '<meta name="robots" content="noindex, nofollow">\n' if hidden else ""
     if url is not None:
         full = BASE + re.sub(r"(^|/)index\.html$", r"\1", url)
-        URLS.append((full, date))
+        if not hidden:
+            URLS.append((full, date))
         img = BASE + (image or OG_DEFAULT)
         d = html.escape(desc)
-        head = (f'<meta name="description" content="{d}">\n'
+        head += (f'<meta name="description" content="{d}">\n'
                 f'<link rel="canonical" href="{full}">\n'
                 f'<meta property="og:type" content="{kind}">\n'
                 f'<meta property="og:site_name" content="{html.escape(SITE)}">\n'
@@ -353,7 +355,10 @@ def main():
                      "years": cmeta.get("years", ""), "status": cmeta.get("status", ""),
                      "count_prefix": cmeta.get("count_prefix", ""),
                      # sign: last — подпись «Тбилиси, месяц год» только у последнего текста сборника
-                     "sign": cmeta.get("sign", "")})
+                     "sign": cmeta.get("sign", ""),
+                     # hidden: yes — сборник только по прямой ссылке (для первых читателей):
+                     # нет на главной, в «Новом», в карте сайта и RSS, страницы закрыты от поиска
+                     "hidden": bool(cmeta.get("hidden", ""))})
 
     # главная тема цикла: копия трека и плеер на страницах сборника
     for c in cols:
@@ -398,8 +403,9 @@ def main():
         return " · ".join(x for x in (c["kind"], what, c["status"]) if x)
 
     # «Новое на сайте»: три сборника, где тексты появлялись последними (даты из published.json)
+    shown = [c for c in cols if not c["hidden"]]  # скрытые сборники на главную не попадают
     fresh = []
-    for c in cols:
+    for c in shown:
         reads = [w for w in c["works"] if not w["url"]]
         if not reads:
             continue
@@ -457,7 +463,7 @@ def main():
 
     shelves, chips = [], []
     for sid, sname, sdesc in SHELVES:
-        cs = sorted((c for c in cols if c["shelf"] == sid), key=lambda c: c["place"])
+        cs = sorted((c for c in shown if c["shelf"] == sid), key=lambda c: c["place"])
         if not cs:
             continue
         chips.append(f'<a class="chip" href="#sh-{sid}">{html.escape(sname)}</a>')
@@ -466,7 +472,7 @@ def main():
                        f'<p class="shd">{html.escape(sdesc)}</p>'
                        '<div class="shelf row">' + "\n".join(tile(c) for c in cs) + '</div></section>')
     known = {s[0] for s in SHELVES}
-    for c in cols:  # сборники без полки: широкая карточка «Вне циклов» внизу
+    for c in shown:  # сборники без полки: широкая карточка «Вне циклов» внизу
         if c["shelf"] in known:
             continue
         name = c["title"].partition(". ")[0]
@@ -487,7 +493,7 @@ def main():
              '<button type="button" data-view="shelves" aria-pressed="true">По полкам</button>'
              '<button type="button" data-view="written" aria-pressed="false">По времени написания</button></div></div>',
              '<div id="v-shelves">' + "\n".join(shelves) + '</div>',
-             '<div id="v-written" hidden><div class="shelf">' + "\n".join(tile(c, False) for c in cols) + '</div></div>']
+             '<div id="v-written" hidden><div class="shelf">' + "\n".join(tile(c, False) for c in shown) + '</div></div>']
     open(f"{OUT}/index.html", "w", encoding="utf-8").write(page(
         SITE, "\n".join(parts), "", wide=True, url="index.html",
         desc="Повести и рассказы Павла Юрича: детективы о старом Тифлисе, Риме и Китае, "
@@ -505,7 +511,7 @@ def main():
         cdesc = c["desc"] or ((snippet(c["about"], 200) or plain(blurb(c["about"]))) if c["about"] else "")
         cdesc = cdesc or f"Сборник прозы Павла Юрича «{c['title']}». Читать бесплатно."
         open(f"{OUT}/{c['slug']}/index.html", "w", encoding="utf-8").write(
-            page(f'{c["title"]} — {AUTHOR}', body, "../", crumbs, url=f"{c['slug']}/index.html",
+            page(f'{c["title"]} — {AUTHOR}', body, "../", crumbs, url=f"{c['slug']}/index.html", hidden=c["hidden"],
                  desc=cdesc, image=f"{c['slug']}/cover.jpg" if c["cover"] else "",
                  ld={"@context": "https://schema.org", "@type": "Book", "name": c["title"],
                      "inLanguage": "ru", "author": PERSON, "isAccessibleForFree": True}))
@@ -555,15 +561,16 @@ def main():
             wtitle = (f'{w["title"]} — {AUTHOR}' if w["title"] == short
                       else f'{w["title"]} — {short} — {AUTHOR}')
             key = f'{c["slug"]}/{w["slug"]}'
-            published.setdefault(key, today)
             desc = snippet(w["body"]) or f'{w["title"]}: из сборника «{c["title"]}»'
-            feed.append({"title": f'{w["title"]} — {short}', "url": BASE + key + ".html",
+            if not c["hidden"]:  # скрытым дата появления ставится, когда их откроют
+                published.setdefault(key, today)
+                feed.append({"title": f'{w["title"]} — {short}', "url": BASE + key + ".html",
                          "date": published[key], "desc": desc, "order": len(feed)})
             open(f"{OUT}/{c['slug']}/{w['slug']}.html", "w", encoding="utf-8").write(
-                page(wtitle, body, "../", crumbs, url=key + ".html", desc=desc, kind="article",
+                page(wtitle, body, "../", crumbs, url=key + ".html", desc=desc, kind="article", hidden=c["hidden"],
                      image=(f'{c["slug"]}/{w["pic"]}' if w["pic"] else
                             f'{c["slug"]}/cover.jpg' if c["cover"] else ""),
-                     date=published[key],
+                     date=published.get(key, today),
                      ld={"@context": "https://schema.org", "@type": "CreativeWork", "name": w["title"],
                          "inLanguage": "ru", "author": PERSON, "isAccessibleForFree": True,
                          "isPartOf": {"@type": "Book", "name": c["title"], "url": f'{BASE}{c["slug"]}/'}}))
