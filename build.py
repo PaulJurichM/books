@@ -380,8 +380,9 @@ def main():
         return f"{n} {forms[k]}"
 
     def blurb(text):
-        """Первая фраза аннотации сборника, без разметки."""
-        t = re.sub(r"[*_>#]", "", text).split("\n\n")[0].strip()
+        """Первая фраза аннотации сборника, без разметки; врезка-цитата (> …) в начале пропускается."""
+        paras = [b for b in re.split(r"\n\s*\n", text.strip()) if not b.lstrip().startswith(">")] or [text]
+        t = re.sub(r"[*_>#]", "", paras[0]).strip()
         m = re.match(r"(.+?[.!?…])(\s|$)", t)
         return (m.group(1) if m else t)[:200]
 
