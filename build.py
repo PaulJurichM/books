@@ -358,7 +358,11 @@ def main():
                      "sign": cmeta.get("sign", ""),
                      # hidden: yes — сборник только по прямой ссылке (для первых читателей):
                      # нет на главной, в «Новом», в карте сайта и RSS, страницы закрыты от поиска
-                     "hidden": bool(cmeta.get("hidden", ""))})
+                     "hidden": bool(cmeta.get("hidden", "")),
+                     # nofresh: yes — сборник не попадает в «Новое на сайте» и без плашки «новое»
+                     "nofresh": bool(cmeta.get("nofresh", "")),
+                     # short: имя для карточек «Нового» и ленты, если название с точкой — не «Имя. Подзаголовок»
+                     "short": cmeta.get("short", "")})
 
     # главная тема цикла: копия трека и плеер на страницах сборника
     for c in cols:
@@ -407,6 +411,8 @@ def main():
     shown = [c for c in cols if not c["hidden"]]  # скрытые сборники на главную не попадают
     fresh = []
     for c in shown:
+        if c["nofresh"]:
+            continue
         reads = [w for w in c["works"] if not w["url"]]
         if not reads:
             continue
@@ -450,7 +456,7 @@ def main():
 
     fcards = []
     for last, c, day in fresh:
-        name = c["title"].partition(". ")[0]
+        name = c["short"] or c["title"].partition(". ")[0]
         main_ = [x for x in day if x["title"] not in EXTRA] or day
         w = main_[-1]  # последний текст дня, послесловие не в счёт
         what = f"«{w['title']}»" if w["title"] != name else "Новый текст"
@@ -558,7 +564,7 @@ def main():
                        + (f'<figcaption>{html.escape(w["caption"])}</figcaption>' if w["caption"] else "") + "</figure>"
                        if w["pic"] else "")
                     + f'{render(w["body"])}{"" if c["sign"] == "last" and nxt else signature(w["written"], w["revised"], w["until"])}</article>{nav}')
-            short = c["title"].partition(". ")[0]
+            short = c["short"] or c["title"].partition(". ")[0]
             wtitle = (f'{w["title"]} — {AUTHOR}' if w["title"] == short
                       else f'{w["title"]} — {short} — {AUTHOR}')
             key = f'{c["slug"]}/{w["slug"]}'

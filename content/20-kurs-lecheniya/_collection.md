@@ -1,4 +1,5 @@
 ---
+nofresh: yes
 title: Курс лечения
 shelf: dark
 place: 5
