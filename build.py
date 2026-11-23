@@ -94,7 +94,16 @@ def signature(written, revised="", until=""):
     return f'<p class="sign"><em>{PLACE}, {w}{" — " + r if r else ""}</em></p>'
 
 
-def render(body):
+def fig(src, caption, alt):
+    """<figure> с подписью; пустая строка, если картинки нет"""
+    if not src:
+        return ""
+    return (f'<figure><img src="{src}" alt="{html.escape(caption or alt)}" loading="lazy">'
+            + (f'<figcaption>{html.escape(caption)}</figcaption>' if caption else "") + "</figure>")
+
+
+def render(body, before_h2=""):
+    """before_h2 — html, вставляемый перед первым заголовком «## » (фото блюда перед рецептом)"""
     global _FN
     notes = {}
     def grab(m):
@@ -110,6 +119,9 @@ def render(body):
         if block.strip() in ("⁂", "* * *"):
             out.append('<p class="sep">⁂</p>')
         elif block.startswith("## "):
+            if before_h2:
+                out.append(before_h2)
+                before_h2 = ""
             out.append(f"<h2>{html.escape(block[3:].strip())}</h2>")
         elif block.startswith(">"):
             # цитата: эпиграф, письмо, документ; пустая строка «>» делит абзацы
@@ -333,9 +345,11 @@ def main():
             wslug = re.sub(r"^\d+-", "", f[:-3])
             pic = next((f"images/{wslug}{e}" for e in (".jpg", ".png", ".webp")
                         if os.path.exists(os.path.join(p, "images", wslug + e))), "")
+            dish = next((f"images/{wslug}-dish{e}" for e in (".jpg", ".png", ".webp")
+                         if os.path.exists(os.path.join(p, "images", wslug + "-dish" + e))), "")
             works.append({"slug": wslug, "title": meta.get("title", f),
-                          "body": body, "min": minutes(body), "pic": pic,
-                          "caption": meta.get("caption", ""),
+                          "body": body, "min": minutes(body), "pic": pic, "dish": dish,
+                          "caption": meta.get("caption", ""), "caption_dish": meta.get("caption_dish", ""),
                           "section": bool(meta.get("section", "")),
                           "part": meta.get("part", ""), "nonum": bool(meta.get("nonum", "")), "url": meta.get("url", ""),
                           "alias": meta.get("alias", ""), "written": meta.get("written", ""), "revised": meta.get("revised", ""), "until": meta.get("until", "")})
@@ -563,7 +577,7 @@ def main():
                     + (f'<figure><img src="{w["pic"]}" alt="{html.escape(w["caption"] or "Иллюстрация к рассказу «" + w["title"] + "»")}" loading="lazy">'
                        + (f'<figcaption>{html.escape(w["caption"])}</figcaption>' if w["caption"] else "") + "</figure>"
                        if w["pic"] else "")
-                    + f'{render(w["body"])}{"" if c["sign"] == "last" and nxt else signature(w["written"], w["revised"], w["until"])}</article>{nav}')
+                    + f'{render(w["body"], fig(w["dish"], w["caption_dish"], "Блюдо из рассказа «" + w["title"] + "»"))}{"" if c["sign"] == "last" and nxt else signature(w["written"], w["revised"], w["until"])}</article>{nav}')
             short = c["short"] or c["title"].partition(". ")[0]
             wtitle = (f'{w["title"]} — {AUTHOR}' if w["title"] == short
                       else f'{w["title"]} — {short} — {AUTHOR}')
